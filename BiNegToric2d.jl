@@ -126,16 +126,18 @@ end
 
 function calcCoeffBiPTFromPT( data::BiNegData )
 	# coeffBiLst = zeros( ntuple( x->2, 2*numL ) );
+	itABProdWithLin = Iterators.enumerate( data.it2ABProdLst );
 	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.it2ABProdLst )
-		val = 0;
-		for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( data.it2ABProdLst )
-			for ii = 1 : data.numL
-				data.iaALst[ii] = iAProd[ii] == jAProd[ii] ? 1 : 2;
-				data.ibBLst[ii] = iBProd[ii] == jBProd[ii] ? 1 : 2;
-			end
-			val += abs(data.coeff1Lst[data.iaALst..., data.ibBLst...]) * data.coeff0Lst[jLin];
+		# val = 0;
+		# for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( data.it2ABProdLst )
+		for (jLin, ( jAProd, jBProd ) ) in itABProdWithLin
+			# for ii = 1 : data.numL
+				# data.iaALst[ii] = iAProd[ii] == jAProd[ii] ? 1 : 2;
+				# data.ibBLst[ii] = iBProd[ii] == jBProd[ii] ? 1 : 2;
+			# end
+			# val += abs(data.coeff1Lst[data.iaALst..., data.ibBLst...]) * data.coeff0Lst[jLin];
 		end
-		data.coeffBiLst[iLin] = val;
+		# data.coeffBiLst[iLin] = val;
 	end
 end
 
