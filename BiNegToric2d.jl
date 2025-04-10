@@ -4,6 +4,8 @@ module BiNegToric2d
 
 using StaticArrays
 using LinearAlgebra
+using JLD2
+using FilenameManip
 
 using Infiltrator
 
@@ -16,6 +18,9 @@ const idMat2d = @MMatrix [1 0; 0 1];
 const bool2Lst = @MVector [false, true];
 const sgn2Lst = @MVector [1, -1];
 const it2Lst = @MVector [1, 2];
+
+const fMainBiNegMinArr = "biNegMinArr";
+const attrLstBiNegMinArr = ["nSpin", "lambMax", "lambStep"];
 
 struct TransHelper
 	transMat::MMatrix{2,2,Float64,4};
