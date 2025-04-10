@@ -1,6 +1,2 @@
-<<<<<<< HEAD
 *.pb.gz
-=======
-*.pb.gz
-
->>>>>>> iterAlloc
+*.jld2
