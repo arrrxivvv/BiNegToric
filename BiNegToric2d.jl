@@ -45,24 +45,33 @@ function BiTransHelper()
 	BiTransHelper( transMatLst, matResult, matTmp );
 end
 
-struct BiNegData
+struct BiNegData{N,N2,Pow2N}
 	numL::Int64;
 	helper::BiTransHelper;
-	it2ProdLst;
-	it2ABProdLst;
-	coeff1Lst::Array{Float64};
-	coeff0Lst::Array{Float64};
-	coeffBiLst::Array{Float64};
+	iter2Prod::Iterators.ProductIterator{NTuple{N,MVector{2,Int64}}};
+	# it2ProdLst::MArray{MVector{N,Int64},N};
+	it2ProdLst::MArray{NTuple{N,2},NTuple{N,Int64},N,Pow2N};
+	iter2ABProd::Iterators.ProductIterator{ NTuple{2, Iterators.ProductIterator{NTuple{N, MVector{2,Int64}}} } };
+	coeff1Lst::Array{Float64,N2};
+	coeff0Lst::Array{Float64,N2};
+	coeffBiLst::Array{Float64,N2};
 	spinALst::Vector{Bool};
 	spinBLst::Vector{Bool};
 	spinLst::Vector{Bool};
 	iaALst::Vector{Int64};
 	ibBLst::Vector{Int64};
+	function BiNegData( numL::Int64, helper::BiTransHelper, iter2Prod::Iterators.ProductIterator{NTuple{N,MVector{2,Int64}}}, it2ProdLst::MArray{NTuple{N,2},NTuple{N,Int64},N,Pow2N}, iterABProd::Iterators.ProductIterator{NTuple{2,Iterators.ProductIterator{NTuple{N,MVector{2,Int64}}}}}, coeff1Lst::Array{Float64,N2}, coeff0Lst::Array{Float64,N2}, coeffBilst::Array{Float64,N2}, spinALst::Vector{Bool}, spinBLst::Vector{Bool}, spinLst::Vector{Bool}, iaALst, ibBLst ) where {N,N2,Pow2N}
+		if N2 != 2*N || N != numL || Pow2N != 2^N
+			error( "N2, 2N, Pow2N or numL mismatch" );
+		end
+		new{N,N2,Pow2N}( numL, helper, iter2Prod, it2ProdLst, iterABProd, coeff1Lst, coeff0Lst, coeffBilst, spinALst, spinBLst, spinLst, iaALst, ibBLst );
+	end
 end
 
 function BiNegData( numL::Int64, transHelper::BiTransHelper )
-	it2ProdLst = Iterators.product( ntuple( x->it2Lst, numL )... );
-	it2ABProdLst = Iterators.product( ntuple( x->it2ProdLst, 2 )... );
+	iter2Prod = Iterators.product( ntuple( x->it2Lst, numL )... );
+	it2ProdLst = collect( iter2Prod );
+	iter2ABProd = Iterators.product( ntuple( x->iter2Prod, 2 )... );
 	coeff1Lst = zeros( ntuple( x->2, 2*numL ) );
 	coeff0Lst = deepcopy( coeff1Lst );
 	coeffBiLst = similar(coeff0Lst);
@@ -72,14 +81,14 @@ function BiNegData( numL::Int64, transHelper::BiTransHelper )
 	iaALst = ones(Int64,numL);
 	ibBLst = similar(iaALst);
 	
-	data = BiNegData( numL, transHelper, it2ProdLst, it2ABProdLst, coeff1Lst, coeff0Lst, coeffBiLst, spinALst, spinBLst, spinLst, iaALst, ibBLst );
+	data = BiNegData( numL, transHelper, iter2Prod, it2ProdLst, iter2ABProd, coeff1Lst, coeff0Lst, coeffBiLst, spinALst, spinBLst, spinLst, iaALst, ibBLst );
 	calcPT0Coeff(data);
 	
 	return data;
 end
 
 function calcPT0Coeff( data::BiNegData )
-	for (iAProd, iBProd) in data.it2ABProdLst
+	for (iAProd, iBProd) in data.iter2ABProd
 		for ii = 1 : data.numL
 			data.spinALst[ii] = bool2Lst[iAProd[ii]];
 			data.spinBLst[ii] = bool2Lst[iBProd[ii]];
@@ -110,7 +119,7 @@ function calcPTCoeff( data::BiNegData, beta, lambA, lambB )
 		sgn = sgn2Lst[ii];
 		data.helper.transMatLst[ii] .= exp.( -kappaA .* IsingH .+ beta .* lambB .* IsingJ .* sgn );
 	end
-	for ( iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.it2ABProdLst )
+	for ( iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.iter2ABProd )
 		matResult .= idMat2d;
 		for ii = 1 : data.numL
 			iASgn = iAProd[ii];
@@ -126,10 +135,10 @@ end
 
 function calcCoeffBiPTFromPT( data::BiNegData )
 	# coeffBiLst = zeros( ntuple( x->2, 2*numL ) );
-	itABProdWithLin = Iterators.enumerate( data.it2ABProdLst );
-	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.it2ABProdLst )
+	itABProdWithLin = Iterators.enumerate( data.iter2ABProd );
+	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.iter2ABProd )
 		# val = 0;
-		# for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( data.it2ABProdLst )
+		# for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( data.iter2ABProd )
 		for (jLin, ( jAProd, jBProd ) ) in itABProdWithLin
 			# for ii = 1 : data.numL
 				# data.iaALst[ii] = iAProd[ii] == jAProd[ii] ? 1 : 2;
@@ -148,13 +157,13 @@ end
 
 function calcPT0Coeff( numL::Int64 )
 	it2ProdLst = Iterators.product( ntuple( x -> it2Lst, numL )... );
-	it2ABProdLst = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
+	iter2ABProd = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
 	
 	coeffLst0 = zeros( ntuple(x->2, 2*numL) );
 	spinALst = zeros(Bool, numL);
 	spinBLst = similar(spinALst);
 	spinLst = similar(spinALst);
-	for (iAProd, iBProd) in it2ABProdLst
+	for (iAProd, iBProd) in iter2ABProd
 		for ii = 1 : numL
 			spinALst[ii] = bool2Lst[iAProd[ii]];
 			spinBLst[ii] = bool2Lst[iBProd[ii]];
@@ -183,13 +192,13 @@ function calcPTCoeff( helper::TransHelper, numL::Int64, beta, lambA, lambB )
 	matTmp = helper.matTmp
 
 	it2ProdLst = Iterators.product( ntuple( x -> it2Lst, numL )... );
-	it2ABProdLst = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
+	iter2ABProd = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
 	
 	kappaA = -log( tanh( beta * lambA ) );
 	
 	coeffLst = zeros( ntuple( x->2, 2*numL ) );
 	transMatPNLst = [ exp.( -kappaA .* IsingH .+ beta .* lambB .* IsingJ .* sgn ) for sgn in sgn2Lst ];
-	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( it2ABProdLst )
+	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( iter2ABProd )
 		matResult .= idMat2d;
 		for ii = 1 : numL
 			iASgn = iAProd[ii];
@@ -202,7 +211,7 @@ function calcPTCoeff( helper::TransHelper, numL::Int64, beta, lambA, lambB )
 		coeffLst[iLin] = tr( matResult );
 	end
 	
-	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( it2ABProdLst )
+	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( iter2ABProd )
 		
 	end
 	
@@ -211,7 +220,7 @@ end
 
 function calcPTCoeffTest( numL::Int64 = 3 )
 	it2ProdLst = Iterators.product( ntuple( x -> it2Lst, numL )... );
-	it2ABProdLst = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
+	iter2ABProd = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
 	
 	lambA = 1;
 	lambB = 1;
@@ -225,7 +234,7 @@ function calcPTCoeffTest( numL::Int64 = 3 )
 	matStart = @MMatrix [1 0; 0 1];
 	matResult = @MMatrix zeros(2,2); 
 	matTmp = @MMatrix zeros(2,2);
-	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( it2ABProdLst )
+	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( iter2ABProd )
 		matResult .= matStart;
 		for ii = 1 : numL
 			iASgn = iAProd[ii];
@@ -238,7 +247,7 @@ function calcPTCoeffTest( numL::Int64 = 3 )
 		coeffLst[iLin] = tr( matResult );
 	end
 	
-	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( it2ABProdLst )
+	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( iter2ABProd )
 		
 	end
 	
@@ -257,14 +266,14 @@ end
 
 function calcCoeffBiPTFromPT( numL::Int64, coeffLst::Array, coeffLst0::Array )
 	it2ProdLst = Iterators.product( ntuple( x -> it2Lst, numL )... );
-	it2ABProdLst = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
+	iter2ABProd = Iterators.product( ntuple( x -> it2ProdLst, 2 )... );
 	
 	coeffBiLst = zeros( ntuple( x->2, 2*numL ) );
 	iaALst = @MVector zeros(Int64, numL);
 	ibBLst = similar(iaALst);
-	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( it2ABProdLst )
+	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( iter2ABProd )
 		val = 0;
-		for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( it2ABProdLst )
+		for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( iter2ABProd )
 			for ii = 1 : numL
 				iaALst[ii] = iAProd[ii] == jAProd[ii] ? 1 : 2;
 				ibBLst[ii] = iBProd[ii] == jBProd[ii] ? 1 : 2;
