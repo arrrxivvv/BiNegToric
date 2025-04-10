@@ -63,8 +63,8 @@ struct BiNegData{N,N2,Pow2N}
 	spinALst::Vector{Bool};
 	spinBLst::Vector{Bool};
 	spinLst::Vector{Bool};
-	iaALst::Vector{Int64};
-	ibBLst::Vector{Int64};
+	iaALst::MVector{N,Int64};
+	ibBLst::MVector{N,Int64};
 	function BiNegData( numL::Int64, helper::BiTransHelper, iter2Prod::Iterators.ProductIterator{NTuple{N,MVector{2,Int64}}}, it2ProdLst::MArray{NTuple{N,2},NTuple{N,Int64},N,Pow2N}, iterABProd::Iterators.ProductIterator{NTuple{2,Iterators.ProductIterator{NTuple{N,MVector{2,Int64}}}}}, coeff1Lst::Array{Float64,N2}, coeff0Lst::Array{Float64,N2}, coeffBilst::Array{Float64,N2}, spinALst::Vector{Bool}, spinBLst::Vector{Bool}, spinLst::Vector{Bool}, iaALst, ibBLst ) where {N,N2,Pow2N}
 		if N2 != 2*N || N != numL || Pow2N != 2^N
 			error( "N2, 2N, Pow2N or numL mismatch" );
@@ -83,7 +83,7 @@ function BiNegData( numL::Int64, transHelper::BiTransHelper )
 	spinALst = zeros(Bool, numL);
 	spinBLst = similar(spinALst);
 	spinLst = similar(spinALst);
-	iaALst = ones(Int64,numL);
+	iaALst = @MVector ones(Int64,numL);
 	ibBLst = similar(iaALst);
 	
 	data = BiNegData( numL, transHelper, iter2Prod, it2ProdLst, iter2ABProd, coeff1Lst, coeff0Lst, coeffBiLst, spinALst, spinBLst, spinLst, iaALst, ibBLst );
