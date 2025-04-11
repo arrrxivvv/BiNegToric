@@ -139,7 +139,6 @@ function calcPTCoeff( data::BiNegData, beta, lambA, lambB )
 end
 
 function calcCoeffBiPTFromPT( data::BiNegData )
-	# coeffBiLst = zeros( ntuple( x->2, 2*numL ) );
 	itABProdWithLin = Iterators.enumerate( data.iter2ABProd );
 	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.iter2ABProd )
 		val = 0;

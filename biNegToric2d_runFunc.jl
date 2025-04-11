@@ -1,5 +1,5 @@
 
-function runCalcCoeffBiNeg( numL::Int64; lambMax = 2, lambStep = 0.1 )
+function runCalcCoeffBiNeg( numL::Int64; lambMax = 2, lambStep = 0.1, fMod = "" )
 	# lambMax = 2;
 	# lambStep = 0.1;
 	lambALst = [lambStep:lambStep:lambMax;];
@@ -19,7 +19,7 @@ function runCalcCoeffBiNeg( numL::Int64; lambMax = 2, lambStep = 0.1 )
 	
 	valLst = Any[numL, lambMax, lambStep];
 	fName = fNameFunc( fMainBiNegMinArr, attrLstBiNegMinArr, valLst, jld2Type );
-	jldsave( fName; nSpin = numL, lambMax = lambMax, lambStep = lambStep, minBiLst = minBiLst );
+	jldsave( fName; nSpin = numL, lambMax = lambMax, lambStep = lambStep, minBiLst = minBiLst; fMod = fMod );
 	
 	# return coeffBiLstLst, minBiLst;
 	return fName;
