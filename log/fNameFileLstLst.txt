@@ -1,0 +1,2 @@
+biNegMinArr_nSpin_3_lambMax_2_lambStep_0.1.jld2
+biNegMinArr_nSpin_4_lambMax_2_lambStep_0.1.jld2
