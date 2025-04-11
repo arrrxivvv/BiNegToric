@@ -12,7 +12,7 @@ using Infiltrator
 const sigMatZ = @MMatrix [1 0; 0 -1];
 const IsingJ = @MMatrix [1.0 -1; -1 1];
 const IsingHRaw = @MMatrix [1.0 0; 0 -1];
-const IsingH = ( 1 .- IsingHRaw ) ./ 2;
+const IsingH = ( 1 .- IsingHRaw ) ./ 2 / 2;
 const idMat2d = @MMatrix [1 0; 0 1];
 
 const bool2Lst = @MVector [false, true];
@@ -98,10 +98,10 @@ function calcPT0Coeff( data::BiNegData )
 			data.spinALst[ii] = bool2Lst[iAProd[ii]];
 			data.spinBLst[ii] = bool2Lst[iBProd[ii]];
 		end
-		if reduce(xor, data.spinALst) && reduce(xor, data.spinBLst)
+		if !reduce(xor, data.spinALst) && !reduce(xor, data.spinBLst)
 			data.spinLst[1] = false;
 			for ii = 1 : data.numL-1
-				data.spinLst[ii+1] = !xor( data.spinLst[ii], data.spinBLst[ii] );
+				data.spinLst[ii+1] = xor( data.spinLst[ii], data.spinBLst[ii] );
 			end
 			ans = false;
 			for ii = 1 : data.numL

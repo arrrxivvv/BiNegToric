@@ -7,7 +7,7 @@ using DelimitedFiles
 nSpinMin = 3;
 nSpinMax = 4;
 
-fMod = "";
+fMod = "invXor";
 
 fNameLst = Vector{String}(undef, nSpinMax - nSpinMin + 1);
 
