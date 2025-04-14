@@ -1,10 +1,9 @@
 
-function runCalcCoeffBiNeg( numL::Int64; lambMax = 2, lambStep = 0.1, fMod = "" )
+function runCalcCoeffBiNeg( numL::Int64; lambMax = 2, lambMin = 0.1, lambStep = 0.1, fMod = "" )
 	# lambMax = 2;
 	# lambStep = 0.1;
-	lambALst = [lambStep:lambStep:lambMax;];
-	lambBLst = [lambStep:lambStep:lambMax;];
-	# beat = 1;
+	lambALst = [lambMin:lambStep:lambMax;];
+	lambBLst = [lambMin:lambStep:lambMax;];
 	helper = BiTransHelper();
 	data = BiNegData( numL, helper );
 	

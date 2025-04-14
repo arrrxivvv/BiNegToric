@@ -12,7 +12,8 @@ using Infiltrator
 const sigMatZ = @MMatrix [1 0; 0 -1];
 const IsingJ = @MMatrix [1.0 -1; -1 1];
 const IsingHRaw = @MMatrix [1.0 0; 0 -1];
-const IsingH = ( 1 .- IsingHRaw ) ./ 2 / 2;
+const IsingH = ( 1 .- IsingHRaw ) ./ 2;
+# const IsingH = @MMatrix [0.0 0; 0 1/2];
 const idMat2d = @MMatrix [1 0; 0 1];
 
 const bool2Lst = @MVector [false, true];
@@ -134,21 +135,23 @@ function calcPTCoeff( data::BiNegData, beta, lambA, lambB )
 			end
 			matResult .= mul!( matTmp, matResult, data.helper.transMatLst[iBSgn] );
 		end
-		data.coeff1Lst[iLin] = tr( matResult );
+		# data.coeff1Lst[iLin] = tr( matResult );
+		data.coeff1Lst[iAProd..., iBProd...] = tr( matResult );
 	end
 end
 
 function calcCoeffBiPTFromPT( data::BiNegData )
-	itABProdWithLin = Iterators.enumerate( data.iter2ABProd );
+	# itABProdWithLin = Iterators.enumerate( data.iter2ABProd );
 	for (iLin, ( iAProd, iBProd ) ) in Iterators.enumerate( data.iter2ABProd )
 		val = 0;
-		# for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( data.iter2ABProd )
-		for (jLin, ( jAProd, jBProd ) ) in itABProdWithLin
+		for (jLin, ( jAProd, jBProd ) ) in Iterators.enumerate( data.iter2ABProd )
+		# for (jLin, ( jAProd, jBProd ) ) in itABProdWithLin
 			for ii = 1 : data.numL
 				data.iaALst[ii] = iAProd[ii] == jAProd[ii] ? 1 : 2;
 				data.ibBLst[ii] = iBProd[ii] == jBProd[ii] ? 1 : 2;
 			end
-			val += abs(data.coeff1Lst[data.iaALst..., data.ibBLst...]) * data.coeff0Lst[jLin];
+			# val += abs(data.coeff1Lst[data.iaALst..., data.ibBLst...]) * data.coeff0Lst[jLin];
+			val += abs(data.coeff1Lst[data.iaALst..., data.ibBLst...]) * data.coeff0Lst[jAProd..., jBProd...];
 		end
 		data.coeffBiLst[iLin] = val;
 	end

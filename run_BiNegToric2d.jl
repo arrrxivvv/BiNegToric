@@ -5,7 +5,7 @@ using SharedFNames
 using DelimitedFiles
 
 nSpinMin = 3;
-nSpinMax = 4;
+nSpinMax = 6;
 
 fMod = "invXor";
 
@@ -13,9 +13,10 @@ fNameLst = Vector{String}(undef, nSpinMax - nSpinMin + 1);
 
 lambMax = 2;
 lambStep = 0.1;
+lambMin = lambStep;
 
 for (iN,n) = Iterators.enumerate( nSpinMin : nSpinMax )
-	@time fNameLst[iN] = BiNegToric2d.runCalcCoeffBiNeg( n; lambMax = lambMax, lambStep = lambStep, fMod = fMod );
+	@time fNameLst[iN] = BiNegToric2d.runCalcCoeffBiNeg( n; lambMax = lambMax, lambMin = lambMin, lambStep = lambStep, fMod = fMod );
 end
 
 writedlm( SharedFNames.dirLog * SharedFNames.fNameFileLstLst, fNameLst );
